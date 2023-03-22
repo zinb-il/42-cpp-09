@@ -6,7 +6,7 @@
 /*   By: ziloughm <ziloughm@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/21 16:52:28 by ziloughm          #+#    #+#             */
-/*   Updated: 2023/03/22 17:47:17 by ziloughm         ###   ########.fr       */
+/*   Updated: 2023/03/22 17:52:31 by ziloughm         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -158,14 +158,21 @@ void BitcoinExchange::getDataBase(void)
 
 void BitcoinExchange::getNextDate(int *dt, std::string date, long double num)
 {
-    std::str
-    std::string d = std::to_string(dt[0]) + "-" + std::to_string(dt[1]) + "-" + std::to_string(dt[3]);
-    while(!btc[date])
+    std::string day = std::to_string(dt[3]);
+    std::string month = std::to_string(dt[1]);
+
+    if (day.length() < 2)
+        day = "0" + day;
+    if (month.length() < 2)
+        month = "0" + day;
+    std::string d = day + "-" + month + "-" + std::to_string(dt[3]);
+    std::cout <<dt[3]<< "pppp" << d << "    "<< date << std::endl;
+    while(!btc[d])
     {
         dt[3]--;
         break;
     }
-    std::cout << date << " => " << num << " = " << (num * btc[date]) << std::endl;
+    std::cout << date << " => " << num << " = " << (num * btc[d]) << std::endl;
 }
 
 void BitcoinExchange::getCurrency(void)
