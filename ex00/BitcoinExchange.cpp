@@ -6,7 +6,7 @@
 /*   By: ziloughm <ziloughm@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/21 16:52:28 by ziloughm          #+#    #+#             */
-/*   Updated: 2023/03/22 17:52:31 by ziloughm         ###   ########.fr       */
+/*   Updated: 2023/03/25 15:36:46 by ziloughm         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 
 BitcoinExchange::BitcoinExchange()
 {
-    std::cout << "BitcoinExchange Default constructor called" << std::endl;
+    //std::cout << "BitcoinExchange Default constructor called" << std::endl;
 }
 
 BitcoinExchange::BitcoinExchange(std::string file):file_in(file), inputfile(new std::ifstream (file, std::ifstream::binary))
@@ -26,12 +26,12 @@ BitcoinExchange::BitcoinExchange(std::string file):file_in(file), inputfile(new 
     if (!inputfile->good())
         throw (BitcoinExchange::ErrFile());
     getDataBase();
-    std::cout << "BitcoinExchange Parameter constroctur called" << std::endl;
+    //std::cout << "BitcoinExchange Parameter constroctur called" << std::endl;
 }
 
 BitcoinExchange::BitcoinExchange(BitcoinExchange const & ob)
 {
-    std::cout << "BitcoinExchange Copy constroctur called" << std::endl;
+    //std::cout << "BitcoinExchange Copy constroctur called" << std::endl;
     *this = ob;
 }
 
@@ -39,7 +39,7 @@ BitcoinExchange::~BitcoinExchange()
 {
     inputfile->close();
     delete(inputfile);
-    std::cout << "BitcoinExchange Destructor called" << std::endl;
+    //std::cout << "BitcoinExchange Destructor called" << std::endl;
 }
 
 /********************************************************************/
@@ -100,24 +100,10 @@ const char * BitcoinExchange::ErrFile::what() const throw ()
 /*                          Public functions                        */
 /********************************************************************/
 
-// bool BitcoinExchange::getValidDate(std::string s)
-// {
-//     std::istringstream  date(s);
-//     struct              tm tm;
-//     int                 m,d,y;
-//     char                dash1, dash2;
-    
-//     if(date >> y >> dash1 >> m >> dash2 >> d && \
-//         dash1 == '-' && dash2 == '-' && date.eof())
-//         return true;
-//     std::cout << ERR1 << s << std::endl;
-//     return false;
-// }
-int * BitcoinExchange::getValidDate(std::string s)
+bool BitcoinExchange::getValidDate(std::string s, int *dt)
 {
-    int                 *dt = new int [3];
     std::smatch         match;
-    std::regex          re("^(\\d{4})-(\\d\\d)-(\\d\\d)$");
+    std::regex          re("^([0-9]{4})-([0-9][0-9])-([0-9][0-9])$");
     int                 daysInMonth[] = {31,28,31,30,31,30,31,31,30,31,30,31};
     
     if(std::regex_match(s, match, re))
@@ -128,21 +114,30 @@ int * BitcoinExchange::getValidDate(std::string s)
         if (dt[1] == 2 && ((!(dt[0] % 4) && dt[0] % 100) || !(dt[0] %400)))
             daysInMonth[1] = 29;
         if (dt[0] > 0 && dt[1] > 0 && dt[1] <= 12 && dt[2] >= 1 && dt[2] <= daysInMonth[dt[1] - 1])
-            return dt;
+            return true;
     }
     std::cout << ERR1 << s << std::endl;
-    return 0;
+    return false;
 }
 
-bool BitcoinExchange::getValidNumb(long double n)
+long double  BitcoinExchange::getValidNumb(std::string n)
 {
-    if (n >= 0 && n <= 1000)
-        return true;
-    else if (n < 0)
-        std::cout << ERR3 << std::endl;
+    std::istringstream  number(n);
+    long double num;
+    
+    if(!(number >> num) || !number.eof())
+    {
+        std::cerr << ERR1 << n << std::endl;
+        return -1;
+    }
+    num =  std::stold(n);
+    if (num >= 0 && num <= 1000)
+        return num;
+    else if (num < 0)
+        std::cerr << ERR3 << std::endl;
     else
-        std::cout << ERR2 << std::endl;
-    return false;
+        std::cerr << ERR2 << std::endl;
+    return -1;
 }
 
 void BitcoinExchange::getDataBase(void)
@@ -158,19 +153,31 @@ void BitcoinExchange::getDataBase(void)
 
 void BitcoinExchange::getNextDate(int *dt, std::string date, long double num)
 {
-    std::string day = std::to_string(dt[3]);
-    std::string month = std::to_string(dt[1]);
-
-    if (day.length() < 2)
-        day = "0" + day;
-    if (month.length() < 2)
-        month = "0" + day;
-    std::string d = day + "-" + month + "-" + std::to_string(dt[3]);
-    std::cout <<dt[3]<< "pppp" << d << "    "<< date << std::endl;
-    while(!btc[d])
+    int daysInMonth[] = {31,28,31,30,31,30,31,31,30,31,30,31};
+    std::string day = (std::to_string(dt[2]).length() < 2) ? "0" + std::to_string(dt[2]) : std::to_string(dt[2]);
+    std::string month = (std::to_string(dt[1]).length() < 2) ? "0" + std::to_string(dt[1]) : std::to_string(dt[1]);
+    std::string d = std::to_string(dt[0]) + "-" + month + "-" + day;
+    
+    while(btc.find(d) == btc.end())
     {
-        dt[3]--;
-        break;
+        if (dt[0] <= 0)
+        {
+            std::cerr << ERR4 << date << std::endl;
+            return ;
+        }
+        (dt[1] == 2 && ((!(dt[0] % 4) && dt[0] % 100) || !(dt[0] %400))) ? daysInMonth[1] = 29 : daysInMonth[1] = 28;
+        if (--dt[2] <= 0)
+        {
+            if (--dt[1] <= 0)
+            {
+                dt[1] = 12;
+                --dt[0];
+                dt[2] = daysInMonth[dt[1] - 1];
+            }
+        }
+        day = (std::to_string(dt[2]).length() < 2) ? "0" + std::to_string(dt[2]) : std::to_string(dt[2]);
+        month = (std::to_string(dt[1]).length() < 2) ? "0" + std::to_string(dt[1]) : std::to_string(dt[1]);
+        d = std::to_string(dt[0]) + "-" + month + "-" + day;
     }
     std::cout << date << " => " << num << " = " << (num * btc[d]) << std::endl;
 }
@@ -180,16 +187,24 @@ void BitcoinExchange::getCurrency(void)
     std::string         str;
     std::string         date;
     long double         num;
+    int                 *dt = new int [3];
     
     std::getline(*inputfile, str);
+    if (std::strcmp("date | value", str.c_str()))
+    {
+        std::cerr << "Error: invalid forme of file." << std::endl;
+        return ;
+    }
     while (std::getline(*inputfile, str))
     {
         date = str.substr(0, str.find(DEL2));
-        num = std::stold(str.substr(str.find(DEL2) + 3));
-        if (!getValidDate(date) || !getValidNumb(num))
+        if (!getValidDate(date, dt))
+            continue;
+        num = getValidNumb(str.substr(str.find(DEL2) + 3));
+        if ( num < 0)
             continue;
         else
-            getNextDate(getValidDate(date) ,date, num);
+            getNextDate(dt ,date, num);
     }
 }
 

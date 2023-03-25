@@ -4,9 +4,9 @@ OBJS = $(SRCS:.cpp=.o)
 
 CC = c++
 
-CFLAGS = -Wall -Werror -Wextra -Wshadow -Wno-shadow -std=c++98
+#CFLAGS = -Wall -Werror -Wextra -Wshadow -Wno-shadow -std=c++98
 
-#CFLAGS = -Wall -Werror -Wextra -Wshadow -Wno-shadow -std=c++98 -fsanitize=address -g
+CFLAGS = -Wall -Werror -Wextra -Wshadow -Wno-shadow -std=c++98 -fsanitize=address -g
 
 NAME = btc
 
