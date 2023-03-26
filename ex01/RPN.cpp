@@ -65,7 +65,7 @@ RPN & RPN::operator=(RPN const & ob)
 /********************************************************************/
 
 
-std::stack<int> RPN::getRpn(void) const
+std::stack<long int> RPN::getRpn(void) const
 {
     return this->rpn;
 }
@@ -82,10 +82,42 @@ std::string RPN::getS_Rpn(void) const
 /*                              Functions                           */
 /********************************************************************/
 
-void    RPN::rpn_algo(void)
+void    RPN::rpn_method(std::stack<long int> &r, char c)
 {
     long int n1, n2;
+    if (r.empty())
+        return ;
+    n1 = rpn.top();
+    rpn.pop();
+    if (r.empty())
+        return ;
+    n2 = rpn.top();
+    rpn.pop();
+    switch (c)
+    {
+        case '+':
+            rpn.push(n1 + n2);
+            break;
+        case '*':
+            rpn.push(n1 * n2);
+            break;
+        case '/':
+            rpn.push(n2 / n1);
+            break;
+        default:
+            rpn.push(n2  - n1);
+            break;
+    }
+}
 
+
+void    RPN::rpn_algo(void)
+{
+    if (!str.size())
+    {
+        std::cout << "Error : your formula is empty" << std::endl;
+        return ;
+    }
     for (std::string::size_type i = 0; i < str.size(); i++)
     {
         if (std::string(EXP1).find(str[i]) == std::string::npos)
@@ -98,30 +130,13 @@ void    RPN::rpn_algo(void)
         else if(std::string(EXP2).find(str[i]) == std::string::npos)
             rpn.push(str[i] - 48);
         else
-        {
-            n1 = rpn.top();
-            rpn.pop();
-            n2 = rpn.top();
-            rpn.pop();
-            switch (str[i])
-            {
-                case '+':
-                    rpn.push(n1 + n2);
-                    break;
-                case '*':
-                    rpn.push(n1 * n2);
-                    break;
-                case '/':
-                    rpn.push(n2 / n1);
-                    break;
-                default:
-                    rpn.push(n2  - n1);
-                    break;
-            }
-        }
+            RPN::rpn_method(rpn, str[i]);
 
     }
-    std::cout << rpn.top() << std::endl;
+    if (rpn.empty())
+        std::cout << "Error : invalid formula" << std::endl;
+    else
+        std::cout << rpn.top() << std::endl;
     
 }
 
